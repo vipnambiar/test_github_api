@@ -54,3 +54,6 @@ docs/_build/
 
 # Pycharm config files:
 .idea/
+
+# Files storing API Keys
+*secret.txt
