@@ -16,8 +16,6 @@ def _parse_token():
        return filehandler.read()
 
 def _git_cmd(cmd_str, repo=getcwd()):
-    if not isinstance(cmd_str, (list, tuple)):
-        cmd_str = [ item.strip() for item in cmd_str.split(' ') ]
     proc = Popen(cmd_str, stdout=PIPE, stderr=PIPE)
     try:
         output, error = proc.communicate()
@@ -51,5 +49,5 @@ class AuthTest(unittest.TestCase):
             print()
 
     def test_git_cmd(self):
-        print(_git_cmd(['git', 'add', '__init__.py', 'test_api.py'], repo='/home/vipin/Projects/test_github_api'))
+        print(_git_cmd(['git', 'add', 'test_api.py'], repo='/home/vipin/Projects/test_github_api'))
         self.assertTrue(1)
