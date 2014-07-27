@@ -15,9 +15,14 @@ def _parse_token():
    with open(token_file, "r") as filehandler:
        return filehandler.read()
 
-def _git_cmd(cmd_str, repo=getcwd()):
+def _git_cmd(cmd_args, repo=getcwd()):
+    '''
+    :param cmd_args:  git command as a list of string. eg:- ['git' 'add' 'xyz.py', 'abc.txt']
+    :param repo: The full path of the local git repository
+    :return: The output or error after execution of command
+    '''
     try:
-        proc = Popen(cmd_str, stdout=PIPE, stderr=PIPE)
+        proc = Popen(cmd_args, stdout=PIPE, stderr=PIPE)
         output, error = proc.communicate()
     except Exception as err:
         print(err)
