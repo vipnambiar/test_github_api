@@ -16,10 +16,10 @@ def _parse_token():
        return filehandler.read()
 
 def _git_cmd(cmd_str, repo=getcwd()):
-    proc = Popen(cmd_str, stdout=PIPE, stderr=PIPE)
     try:
+        proc = Popen(cmd_str, stdout=PIPE, stderr=PIPE)
         output, error = proc.communicate()
-    except SubprocessError as err:
+    except Exception as err:
         print(err)
     else:
         if error:
@@ -49,5 +49,5 @@ class AuthTest(unittest.TestCase):
             print()
 
     def test_git_cmd(self):
-        print(_git_cmd(['git', 'add', 'test_api.py'], repo='/home/vipin/Projects/test_github_api'))
+        print(_git_cmd('git commit -m "removed pass cmd as string"', repo='/home/vipin/Projects/test_github_api'))
         self.assertTrue(1)
