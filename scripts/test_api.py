@@ -1,28 +1,60 @@
 __author__ = 'vipin'
 
-import json
-from os import getcwd, path as pth
-from subprocess import Popen, PIPE, SubprocessError
-from requests.auth import HTTPBasicAuth
+from functools import wraps
 import requests
+from requests.auth import HTTPBasicAuth
+from os import getcwd, path as pth
+from subprocess import Popen, PIPE
+
+
+def log_api_rate_limit(func):
+    """
+    Decorator to display request rate limits info
+    from response headers
+    :param func: function which makes the Github API call
+    :return: request.response object
+    """
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        resp = func(*args, **kwargs)
+        if resp.status_code == requests.codes.ok:
+            print('Request rate limit: {0}'.format(resp.headers['X-RateLimit-Limit']))
+            print('Remaining rate Limit: {0}'.format(resp.headers['X-RateLimit-Remaining']))
+            print()
+        return resp
+    return wrapped
+
 
 def _parse_token():
-   '''
-   :return: Application token fot Github API
-   '''
-   cur_dir = pth.dirname(__file__)
-   token_file = pth.abspath(pth.join(cur_dir, pth.pardir, 'secret.txt'))
-   with open(token_file, "r") as filehandler:
-       return filehandler.read()
+    """
+    :return: Application token fot Github API
+    """
+    cur_dir = pth.dirname(__file__)
+    token_file = pth.abspath(pth.join(cur_dir, pth.pardir, 'secret.txt'))
+    with open(token_file, "r") as filehandler:
+        return filehandler.read()
+
+
+@log_api_rate_limit
+def _github_get(url):
+    """
+    Queries Github API using GET protocol
+    :param url: eg: https://api.github.com/users/vipnambiar
+    :return: requests.response object
+    """
+    user = _parse_token()
+    pwd = 'x-oauth-basic'
+    return requests.get(url, auth=HTTPBasicAuth(user, pwd))
+
 
 def _git_cmd(cmd_args, repo=getcwd()):
-    '''
-    :param cmd_args:  git command as a list of string. eg:- ['git' 'add' 'xyz.py', 'abc.txt']
+    """
+    :param cmd_args: git command as a list of string. eg:- ['git' 'add' 'xyz.py', 'abc.txt']
     :param repo: The full path of the local git repository
     :return: The output or error after execution of command
-    '''
+    """
     try:
-        proc = Popen(cmd_args, stdout=PIPE, stderr=PIPE)
+        proc = Popen(cmd_args, stdout=PIPE, stderr=PIPE, cwd=repo)
         output, error = proc.communicate()
     except Exception as err:
         print(err)
@@ -31,28 +63,3 @@ def _git_cmd(cmd_args, repo=getcwd()):
             return error.decode('unicode_escape')
         else:
             return output.decode('unicode_escape')
-
-# Unit tests
-import unittest
-
-class AuthTest(unittest.TestCase):
-    @unittest.skip
-    def test_parse_token(self,):
-        self.assertEqual(_parse_token(), '76754b6723f3c0f309658151656bc3c1434229e9')
-
-    @unittest.skip
-    def test_connection(self,):
-        user = _parse_token()
-        pwd = 'x-oauth-basic'
-        resp = requests.get('https://api.github.com/users/vipnambiar/repos', auth=HTTPBasicAuth(user, pwd))
-        self.assertEqual(resp.status_code, 200)
-
-        content = json.loads(resp.text)
-        for item in content:
-            for key, val in item.items():
-                print('{0}: {1}'.format(key, val))
-            print()
-
-    def test_git_cmd(self):
-        print(_git_cmd('git commit -m "removed pass cmd as string"', repo='/home/vipin/Projects/test_github_api'))
-        self.assertTrue(1)
