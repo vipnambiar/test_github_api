@@ -13,7 +13,7 @@ class AuthTest(unittest.TestCase):
     def test_parse_token(self,):
         self.assertEqual(parse_token(), '76754b6723f3c0f309658151656bc3c1434229e9')
 
-    @unittest.skip
+    #@unittest.skip
     def test_github_get(self,):
         url = 'https://api.github.com/repos/vipnambiar/jiva.sre.web/commits/rel_0.4'
         resp = github_get(url)
@@ -37,7 +37,7 @@ class AuthTest(unittest.TestCase):
         print(git_cmd(['git', 'status'], repo='/home/vipin/Projects/test_github_api'))
         self.assertTrue(1)
 
-    #@unittest.skip
+    @unittest.skip
     def test_github3_api(self):
         gh = login(token=parse_token())
         repos = gh.iter_repos()
