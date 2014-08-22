@@ -11,6 +11,7 @@ from os import getcwd, path as pth
 from subprocess import Popen, PIPE
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def log_api_rate_limit(func):
@@ -24,9 +25,8 @@ def log_api_rate_limit(func):
     def wrapped(*args, **kwargs):
         resp = func(*args, **kwargs)
         if resp.status_code == requests.codes.ok:
-            print('Request rate limit: {0}'.format(resp.headers['X-RateLimit-Limit']))
-            print('Remaining rate Limit: {0}'.format(resp.headers['X-RateLimit-Remaining']))
-            print()
+            logger.info('Request rate limit: {0}'.format(resp.headers['X-RateLimit-Limit']))
+            logger.info('Remaining rate Limit: {0}\n'.format(resp.headers['X-RateLimit-Remaining']))
         return resp
     return wrapped
 
@@ -57,7 +57,25 @@ def _github_get(url, params=None):
     return resp
 
 
-def _download_file(owner, repo, path, branch='master', dest_filename=None, dest=None):
+def _git_cmd(cmd_args, repo=getcwd()):
+    """
+    :param cmd_args: git command as a list of string. eg:- ['git' 'add' 'xyz.py', 'abc.txt']
+    :param repo: The full path of the local git repository
+    :return: The output or error after execution of command
+    """
+    try:
+        proc = Popen(cmd_args, stdout=PIPE, stderr=PIPE, cwd=repo)
+        output, error = proc.communicate()
+    except Exception as err:
+        print(err)
+    else:
+        if error:
+            return error.decode('unicode_escape')
+        else:
+            return output.decode('unicode_escape')
+
+
+def download_file(owner, repo, path, branch='master', dest_filename=None, dest=None):
     """
     Downloads specified file from the specified Github repo
     :param owner: Github user or organization
@@ -85,9 +103,9 @@ def _download_file(owner, repo, path, branch='master', dest_filename=None, dest=
 
     resp = _github_get(url, params=param_dict)
 
-    logging.debug('Response status: %s', resp.status_code)
-    logging.debug('Response headers: %s', resp.headers)
-    logging.debug('Response text: %s', resp.text)
+    logger.debug('Response status: %s', resp.status_code)
+    logger.debug('Response headers: %s', resp.headers)
+    logger.debug('Response text: %s', resp.text)
 
     if resp.status_code == requests.codes.ok:
         json_resp = json.loads(resp.text)
@@ -102,19 +120,34 @@ def _download_file(owner, repo, path, branch='master', dest_filename=None, dest=
     return dest_filename
 
 
-def _git_cmd(cmd_args, repo=getcwd()):
+def get_pull_request_files(owner, repo, pull_id):
     """
-    :param cmd_args: git command as a list of string. eg:- ['git' 'add' 'xyz.py', 'abc.txt']
-    :param repo: The full path of the local git repository
-    :return: The output or error after execution of command
+    GET /repos/:owner/:repo/pulls/:number/files
+
+    :param owner: User/Organization name
+    :param repo: Repository name
+    :param pull_id: Pull request no
+    :return: List of files in the pull request
     """
-    try:
-        proc = Popen(cmd_args, stdout=PIPE, stderr=PIPE, cwd=repo)
-        output, error = proc.communicate()
-    except Exception as err:
-        print(err)
-    else:
-        if error:
-            return error.decode('unicode_escape')
-        else:
-            return output.decode('unicode_escape')
+    file_list = None
+
+    kwargs = dict()
+    kwargs['api_url'] = 'https://api.github.com/repos'
+    kwargs['owner'] = owner
+    kwargs['repo'] = repo
+    kwargs['number'] = pull_id
+    url = '{api_url}/{owner}/{repo}/pulls/{number}/files'.format(**kwargs)
+
+    resp = _github_get(url)
+
+    logger.debug('Response status: %s', resp.status_code)
+    logger.debug('Response headers: %s', resp.headers)
+    logger.debug('Response text: %s', resp.text)
+
+    if resp.status_code == requests.codes.ok:
+        json_resp = json.loads(resp.text)
+        file_list = [fl_obj['filename'] for fl_obj in json_resp]
+        if file_list:
+            logger.debug('\n'.join(file_list))
+
+    return file_list

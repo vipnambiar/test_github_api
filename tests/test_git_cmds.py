@@ -4,7 +4,8 @@ import requests
 import unittest
 from scripts.api_wrapper import _github_get as github_get
 from scripts.api_wrapper import _git_cmd as git_cmd
-from scripts.api_wrapper import _download_file as download_file
+from scripts.api_wrapper import download_file
+from scripts.api_wrapper import get_pull_request_files
 from scripts.api_wrapper import _parse_token as parse_token
 
 from github3 import login
@@ -34,7 +35,7 @@ class AuthTest(unittest.TestCase):
                                                                                      author_email,
                                                                                      message))
 
-    #@unittest.skip
+    @unittest.skip
     def test_download_file(self):
         owner = 'vipnambiar'
         repo = 'test_github_api'
@@ -44,6 +45,14 @@ class AuthTest(unittest.TestCase):
         self.assertTrue(filename)
 
     #@unittest.skip
+    def test_get_pull_request_files(self):
+        owner = 'vipnambiar'
+        repo = 'test_github_api'
+        pull_id = 1
+        file_list = get_pull_request_files(owner, repo, pull_id)
+        self.assertIsNotNone(file_list)
+
+    @unittest.skip
     def test_git_cmd(self):
         print(git_cmd(['git', 'status'], repo='/home/vipin/Projects/test_github_api'))
         self.assertTrue(1)
