@@ -11,11 +11,11 @@ from github3 import login
 class AuthTest(unittest.TestCase):
     @unittest.skip
     def test_parse_token(self,):
-        self.assertEqual(parse_token(), '76754b6723f3c0f309658151656bc3c1434229e9')
+        self.assertEqual(parse_token(), <secret_key>)
 
     #@unittest.skip
     def test_github_get(self,):
-        url = 'https://api.github.com/repos/vipnambiar/jiva.sre.web/commits/rel_0.4'
+        url = <github url for repo branch>
         resp = github_get(url)
         self.assertEqual(resp.status_code, requests.codes.ok)
 
