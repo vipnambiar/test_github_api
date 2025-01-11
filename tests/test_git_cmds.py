@@ -2,8 +2,11 @@
 import json
 import requests
 import unittest
-from scripts.test_api import _github_get as github_get, _git_cmd as git_cmd
-from scripts.test_api import _parse_token as parse_token
+from scripts.api_wrapper import _github_get as github_get
+from scripts.api_wrapper import _git_cmd as git_cmd
+from scripts.api_wrapper import download_file
+from scripts.api_wrapper import get_pull_request_files
+from scripts.api_wrapper import _parse_token as parse_token
 
 from github3 import login
 
@@ -13,7 +16,7 @@ class AuthTest(unittest.TestCase):
     def test_parse_token(self,):
         self.assertEqual(parse_token(), <secret_key>)
 
-    #@unittest.skip
+    @unittest.skip
     def test_github_get(self,):
         url = <github url for repo branch>
         resp = github_get(url)
@@ -31,6 +34,23 @@ class AuthTest(unittest.TestCase):
                                                                                      author_name,
                                                                                      author_email,
                                                                                      message))
+
+    @unittest.skip
+    def test_download_file(self):
+        owner = 'vipnambiar'
+        repo = 'test_github_api'
+        path = 'tests/test_git_cmds.py'
+        branch = 'master'
+        filename = download_file(owner, repo, path, branch, dest='/tmp')
+        self.assertTrue(filename)
+
+    #@unittest.skip
+    def test_get_pull_request_files(self):
+        owner = 'vipnambiar'
+        repo = 'test_github_api'
+        pull_id = 1
+        file_list = get_pull_request_files(owner, repo, pull_id)
+        self.assertIsNotNone(file_list)
 
     @unittest.skip
     def test_git_cmd(self):
